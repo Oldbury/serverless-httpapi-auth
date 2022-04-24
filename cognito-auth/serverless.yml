@@ -1,0 +1,41 @@
+org: <yourorg>
+app: <yourapp>
+service: <servicename>
+frameworkVersion: "3"
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: eu-west-2
+  lambdaHashingVersion: "20201221"
+  httpApi:
+    authorizers:
+      userAuthorizer:
+        type: request
+        functionName: userAuthorizer
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+functions:
+  userAuthorizer:
+    handler: functions/authenticate.handler
+    environment:
+      COGNITO_POOL_ID: ${env:COGNITO_POOL_ID}
+  protected-api:
+    handler: functions/protected/handler.handle
+    events:
+      - httpApi:
+          path: /protected
+          method: post
+          authorizer:
+            name: userAuthorizer
+  public-api:
+    handler: functions/public/handler.handle
+    events:
+      - httpApi:
+          path: /public
+          method: get
